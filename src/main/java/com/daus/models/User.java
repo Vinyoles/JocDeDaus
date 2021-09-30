@@ -2,16 +2,17 @@ package com.daus.models;
 
 import java.sql.Timestamp;
 
-import javax.persistence.Id;
-
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection="users")
 public class User {
 	
+	
+	
+	
 	@Id
-	@Field(name="id")
 //	@GeneratedValue(strategy=GenerationType.IDENTITY) //TODO
 	private int ID;
 	
