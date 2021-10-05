@@ -9,19 +9,20 @@ public class IdToAssign {
 	IdToAssign() {
 	}
 	
-	public IdToAssign(int id, int idUser) {
+	public IdToAssign(int id, int idStored) {
 		this.id = id;
-		this.idUser = idUser;
+		this.idStored = idStored;
 	}
 
-	@Id
-	private int id;
-	
-	@Field(name="idUser")
-	private int idUser;
 
+	@Id
+	private int id; //TODO change to enum(?)
+	//1:user, 2:game
 	
+	@Field(name="idStored")
+	private int idStored;
 	
+
 	
 	public int getId() {
 		return id;
@@ -29,10 +30,10 @@ public class IdToAssign {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public int getIdUser() {
-		return idUser;
+	public int getIdStored() {
+		return idStored;
 	}
-	public void setIdUser(int idUser) {
-		this.idUser = idUser;
+	public void setIdStored(int idStored) {
+		this.idStored = idStored;
 	}
 }

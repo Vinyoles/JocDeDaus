@@ -24,10 +24,6 @@ public class User {
 
 	
 	
-//	private static int nextId = IdRepo.findById(0); //TODO get this value from the database. Should be persisted also there
-	
-	
-	
 	
 	public void assignId(int id) {
 		this.id = id;
