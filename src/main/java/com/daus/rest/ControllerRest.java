@@ -1,10 +1,12 @@
 package com.daus.rest;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -81,7 +83,7 @@ public class ControllerRest {
 		}
 	}
 	
-	
+	//Makes a game throw for a player
 	@PostMapping("/{idPlayer}/games")
 	public String throwDices(@PathVariable int idPlayer) {
 		Optional<User> optionalUser = usersRepo.findById(idPlayer);
@@ -113,6 +115,34 @@ public class ControllerRest {
 			return "User not found";
 		}
 	}
+	
+	//Deletes all the throws from a player
+	@DeleteMapping("/{idPlayer}/games")
+	public String deleteGames(@PathVariable int idPlayer) {
+		
+		
+		
+		Optional<User> optionalUser = usersRepo.findById(idPlayer);
+		if(optionalUser.isPresent()) {
+			
+			//collects all the games
+			List<Dice> allGames = gamesRepo.findAll();
+			
+			//iterates along all the games to detect the games made by a player and deletes it
+			Iterator<Dice> ite = allGames.iterator();
+			while(ite.hasNext()) {
+				Dice dice = ite.next();
+				if (dice.getIdPlayer() == idPlayer) {
+					int idDelete = dice.getIdGame();
+					gamesRepo.deleteById(idDelete);
+				}
+			}
+			return "Games history cleared";
+		}
+		else {
+			return "User not found";
+		}
+	}
 }
 
 
@@ -120,7 +150,7 @@ public class ControllerRest {
 * POST: /players : crea un jugador 
 * PUT /players : modifica el nom del jugador 
 * POST /players/{id}/games/ : un jugador específic realitza una tirada dels daus.  
-DELETE /players/{id}/games: elimina les tirades del jugador 
+* DELETE /players/{id}/games: elimina les tirades del jugador 
 GET /players/: retorna el llistat de tots els jugadors del sistema amb el seu percentatge mig d’èxits   
 GET /players/{id}/games: retorna el llistat de jugades per un jugador.  
 GET /players/ranking: retorna el ranking mig de tots els jugadors del sistema. És a dir, el percentatge mig d’èxits. 
