@@ -12,6 +12,7 @@ public class User {
 	public User() {	
 	}
 	
+	
 	@Id
 	private int id;
 	
@@ -20,16 +21,22 @@ public class User {
 	
 	@Field(name="registerDate")
 	private LocalDate registerDate;
+
 	
-	private static int nextId = 0; //TODO get this value from the database. Should be persisted also there
 	
-	public void assignId() {
-		id = ++nextId;
+//	private static int nextId = IdRepo.findById(0); //TODO get this value from the database. Should be persisted also there
+	
+	
+	
+	
+	public void assignId(int id) {
+		this.id = id;
 	}
 	
 	public void assignLocalDate() {
 		registerDate = LocalDate.now();
 	}
+	
 	
 	
 	public int getID() {

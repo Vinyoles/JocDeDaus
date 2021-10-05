@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.daus.models.IdToAssign;
 import com.daus.models.User;
+import com.daus.repository.IdsRepository;
 import com.daus.repository.UsersRepository;
 
 @CrossOrigin(origins = "http://127.0.0.1:5500", maxAge = 3600) //TODO canviar en funció de la web des d'on es conecti
@@ -24,10 +26,29 @@ public class ControllerRest {
 	@Autowired
 	private UsersRepository usersRepository;
 	
+	@Autowired
+	private IdsRepository idRepo;
+	
 	//create a new player
 	@PostMapping
 	public String createNewUser(@RequestBody User user) {
-		user.assignId();
+		
+		//finds the last ID and sends it to the constructor
+		int newId;
+		Optional<IdToAssign> idOptional = idRepo.findById(1);
+		if(idOptional.isPresent()) {
+			newId = idOptional.get().getIdUser() + 1;
+			idOptional.get().setIdUser(newId);
+			idRepo.save(idOptional.get());
+		}
+		else {
+			newId = 1;
+			IdToAssign createId = new IdToAssign(1, newId);
+			idRepo.save(createId);
+		}
+		user.assignId(newId);
+		
+		//assigns the date and save the result to the database
 		user.assignLocalDate();
 		usersRepository.save(user);
 		return "User created (ID-Name): " + user.getID() + "-" + user.getName();
@@ -53,6 +74,8 @@ public class ControllerRest {
 			return "User not found";
 		}
 	}
+	
+	
 }
 
 
@@ -67,3 +90,4 @@ GET /players/ranking: retorna el ranking mig de tots els jugadors del sistema. �
 GET /players/ranking/loser: retorna el jugador amb pitjor percentatge d’èxit 
 GET /players/ranking/winner: retorna el jugador amb pitjor percentatge d’èxit 
  * */
+
