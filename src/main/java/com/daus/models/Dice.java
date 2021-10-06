@@ -73,7 +73,7 @@ public class Dice {
 
 	@Override
 	public String toString() {
-		return "Dice [idGame=" + idGame + ", dice1Result=" + dice1Result + ", dice2Result=" + dice2Result
-				+ ", totalResult=" + totalResult + ", idPlayer=" + idPlayer + "]";
+		return "\"idGame" + idGame + "\": {\"dice1Result\":" + dice1Result + ", \"dice2Result\":" + dice2Result
+				+ ", \"totalResult\":" + totalResult + ", \"idPlayer\":" + idPlayer + "}";
 	}
 }

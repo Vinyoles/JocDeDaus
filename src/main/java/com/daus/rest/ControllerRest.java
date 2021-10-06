@@ -1,5 +1,6 @@
 package com.daus.rest;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -62,11 +63,72 @@ public class ControllerRest {
 		return "User created (ID-Name): " + user.getID() + "-" + user.getName();
 	}
 	
-	//returns all the players
+	//returns all the players and its mean exit percentage
 	@GetMapping
-	public List<User> getAllUsers() {
+	public String getAllUsers() {
+		
+		//list all the users and games
+		List<Dice> games = gamesRepo.findAll();
 		List<User> users = usersRepo.findAll();
-		return users;
+		
+		//declares and initiates the return string
+		String usersWithPercentage = "{\"users\":{";
+		
+		//for each user and game, stores its variable to a JSON file
+		int remainingUsers = users.size()-1;
+		for (User user: users) {
+			usersWithPercentage += user.toString();
+			int numberOfGames = 0;
+			int addedResults = 0;
+			
+			//stores all the games from a player
+			ArrayList<Dice> playerGames = new ArrayList<Dice>();
+			Iterator<Dice> ite = games.iterator();
+			while(ite.hasNext()) {
+				Dice currentGame = ite.next();
+				
+				if (currentGame.getIdPlayer() == user.getID()) {
+					playerGames.add(currentGame);
+				}
+			}
+			
+			//adds each of the player games to the JSON file
+			int remainingPlayers = -1;
+			for(Dice game: playerGames) {
+				usersWithPercentage += game.toString();
+				addedResults += game.getTotalResult();
+				numberOfGames++;
+				
+				//adds a comma to the JSON file for separating from the next data
+				if (remainingPlayers == -1) {
+					remainingPlayers = playerGames.size()-1;
+				}
+				if (remainingPlayers > 0) {
+					usersWithPercentage += ", ";
+					remainingPlayers--;
+				}
+			}
+			
+			//calculates and stores to the JSON the player success rate. If the player hasn't played any game, returns 0
+			double userPercentage;
+			if (numberOfGames > 0) {
+				userPercentage = addedResults / numberOfGames;
+			}
+			else {
+				userPercentage = 0;
+			}
+			usersWithPercentage += "}, \"meanValue\":" + userPercentage + "}";
+			
+			//adds a comma if there are more users
+			if (remainingUsers > 0) {
+				usersWithPercentage += ", ";
+				remainingUsers--;
+			}
+		}
+		
+		//encloses the string and returns the JSON data
+		usersWithPercentage += "}}";
+		return usersWithPercentage;
 	}
 	
 	//modifies a player name
@@ -120,8 +182,6 @@ public class ControllerRest {
 	@DeleteMapping("/{idPlayer}/games")
 	public String deleteGames(@PathVariable int idPlayer) {
 		
-		
-		
 		Optional<User> optionalUser = usersRepo.findById(idPlayer);
 		if(optionalUser.isPresent()) {
 			
@@ -151,10 +211,10 @@ public class ControllerRest {
 * PUT /players : modifica el nom del jugador 
 * POST /players/{id}/games/ : un jugador específic realitza una tirada dels daus.  
 * DELETE /players/{id}/games: elimina les tirades del jugador 
-GET /players/: retorna el llistat de tots els jugadors del sistema amb el seu percentatge mig d’èxits   
+* GET /players/: retorna el llistat de tots els jugadors del sistema amb el seu percentatge mig d’èxits   
 GET /players/{id}/games: retorna el llistat de jugades per un jugador.  
 GET /players/ranking: retorna el ranking mig de tots els jugadors del sistema. És a dir, el percentatge mig d’èxits. 
 GET /players/ranking/loser: retorna el jugador amb pitjor percentatge d’èxit 
-GET /players/ranking/winner: retorna el jugador amb pitjor percentatge d’èxit 
+GET /players/ranking/winner: retorna el jugador amb millor percentatge d’èxit 
  * */
 

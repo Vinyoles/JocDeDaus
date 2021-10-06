@@ -57,6 +57,6 @@ public class User {
 	
 	@Override
 	public String toString() {
-		return "User [ID=" + id + ", userName=" + userName + ", registerDate=" + registerDate + "]";
+		return "\"ID" + id + "\": {\"userName\": \"" + userName + "\", \"registerDate\": \"" + registerDate + "\", \"gamesPlayed\":{";
 	}
 }
