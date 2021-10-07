@@ -1,6 +1,7 @@
 package com.daus.models;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -33,6 +34,30 @@ public class User {
 		registerDate = LocalDate.now();
 	}
 	
+	
+	//calculates the mean value of all the games that has made a player
+	public double meanValue(List<Game> games, int playerID){
+		int numberOfGames = 0;
+		double addedResults = 0;
+		
+		//searches all the games from a player
+		for (Game game : games) {
+			if(game.getIdPlayer() == playerID) {
+				addedResults += game.getTotalResult();
+				numberOfGames++;
+			}
+		}
+		
+		//calculates the player success rate. If the player hasn't played any game, returns 0
+		double userPercentage;
+		if (numberOfGames > 0) {
+			userPercentage = addedResults / numberOfGames;
+		}
+		else {
+			userPercentage = 0;
+		}
+		return userPercentage;
+	}
 	
 	
 	public int getID() {

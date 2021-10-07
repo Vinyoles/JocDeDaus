@@ -78,8 +78,6 @@ public class ControllerRest {
 		int remainingUsers = users.size()-1;
 		for (User user: users) {
 			usersWithPercentage += user.toString();
-			int numberOfGames = 0;
-			int addedResults = 0;
 			
 			//stores all the games from a player
 			ArrayList<Game> playerGames = new ArrayList<Game>();
@@ -96,8 +94,6 @@ public class ControllerRest {
 			int remainingPlayers = -1;
 			for(Game game: playerGames) {
 				usersWithPercentage += game.toString();
-				addedResults += game.getTotalResult();
-				numberOfGames++;
 				
 				//adds a comma to the JSON file for separating from the next data
 				if (remainingPlayers == -1) {
@@ -109,15 +105,8 @@ public class ControllerRest {
 				}
 			}
 			
-			//calculates and stores to the JSON the player success rate. If the player hasn't played any game, returns 0
-			double userPercentage;
-			if (numberOfGames > 0) {
-				userPercentage = addedResults / numberOfGames;
-			}
-			else {
-				userPercentage = 0;
-			}
-			usersWithPercentage += "}, \"meanValue\":" + userPercentage + "}";
+			//stores to the JSON the player success rate. If the player hasn't played any game, stores 0
+			usersWithPercentage += "}, \"meanValue\":" + user.meanValue(games, user.getID()) + "}";
 			
 			//adds a comma if there are more users
 			if (remainingUsers > 0) {
@@ -204,7 +193,7 @@ public class ControllerRest {
 		}
 	}
 	
-	//gets all the games from a player //TODO formatejar el JSON
+	//gets all the games from a player
 	@GetMapping("/{idUser}/games")
 	public String gamesFromPlayerId(@PathVariable int idUser) {
 		Optional<User> optionalUser = usersRepo.findById(idUser);
@@ -250,6 +239,91 @@ public class ControllerRest {
 			return "User not found";
 		}
 	}
+	
+	//returns the mean values of all the players on the system
+	@GetMapping("/ranking")
+	public String getRanking() {
+		String ranking = "{\"mean value\":";
+		
+		//from all the games, searches the total result
+		List<Game> games = gamesRepo.findAll();
+		int gameCounter = 0;
+		double resultAdded = 0;
+		for (Game game: games) {
+			resultAdded += game.getTotalResult();
+			gameCounter++;
+		}
+		
+		//calculates the mean value if there is data
+		double result;
+		if (gameCounter != 0) {
+			result = resultAdded / gameCounter;
+		}
+		else {
+			result = 0;
+		}
+		
+		//returns the result
+		ranking += result +"}";
+		return ranking;
+	}
+	
+	//returns the player with the lower percentage
+	@GetMapping("/ranking/loser")
+	public String getLoser() {
+		String loser = "{";
+		List<Game> games = gamesRepo.findAll();
+		List<User> users = usersRepo.findAll();
+		User theLoser = null;
+		
+		//searches from the users, the user with a lower games rates
+		for (User user: users) {
+			double meanValue = user.meanValue(games, user.getID());
+			if (theLoser == null) {
+				theLoser = user;
+			}
+			else if (meanValue == 0) {
+				break;
+			}
+			else if (meanValue < theLoser.meanValue(games, theLoser.getID())) {
+				theLoser = user;
+			}
+		}
+		
+		//saves the user name and mean value and returns the result
+		String loserName = theLoser.getName();
+		double loserValue = theLoser.meanValue(games, theLoser.getID());
+		loser += "\"loser name\":" + loserName + ", \"loser value\":" + loserValue + "}";
+		return loser;
+	}
+	
+	@GetMapping("/ranking/winner")
+	public String getWinner() {
+		String winner = "{";
+		List<Game> games = gamesRepo.findAll();
+		List<User> users = usersRepo.findAll();
+		User theWinner = null;
+		
+		//searches from the users, the user with a lower games rates
+		for (User user: users) {
+			double meanValue = user.meanValue(games, user.getID());
+			if (theWinner == null) {
+				theWinner = user;
+			}
+			else if (meanValue == 0) {
+				break;
+			}
+			else if (meanValue > theWinner.meanValue(games, theWinner.getID())) {
+				theWinner = user;
+			}
+		}
+		
+		//saves the user name and mean value and returns the result
+		String winnerName = theWinner.getName();
+		double winnerValue = theWinner.meanValue(games, theWinner.getID());
+		winner += "\"winner name\":" + winnerName + ", \"winner value\":" + winnerValue + "}";
+		return winner;
+	}
 }
 
 
@@ -260,8 +334,8 @@ public class ControllerRest {
 * DELETE /players/{id}/games: elimina les tirades del jugador 
 * GET /players/: retorna el llistat de tots els jugadors del sistema amb el seu percentatge mig d’èxits   
 * GET /players/{id}/games: retorna el llistat de jugades per un jugador.  
-GET /players/ranking: retorna el ranking mig de tots els jugadors del sistema. És a dir, el percentatge mig d’èxits. 
-GET /players/ranking/loser: retorna el jugador amb pitjor percentatge d’èxit 
-GET /players/ranking/winner: retorna el jugador amb millor percentatge d’èxit 
+* GET /players/ranking: retorna el ranking mig de tots els jugadors del sistema. És a dir, el percentatge mig d’èxits. 
+* GET /players/ranking/loser: retorna el jugador amb pitjor percentatge d’èxit 
+* GET /players/ranking/winner: retorna el jugador amb millor percentatge d’èxit 
  * */
 

@@ -52,7 +52,7 @@ public class Game {
 	public void setDie2Result(int die2Result) {
 		this.die2Result = die2Result;
 	}
-	public int getTotalResult() {
+	public double getTotalResult() {
 		return totalResult;
 	}
 	public void setTotalResult(int totalResult) {
