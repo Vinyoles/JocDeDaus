@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.daus.models.Dice;
+import com.daus.models.Game;
 import com.daus.models.IdToAssign;
 import com.daus.models.User;
 import com.daus.repository.GamesRepository;
@@ -68,7 +68,7 @@ public class ControllerRest {
 	public String getAllUsers() {
 		
 		//list all the users and games
-		List<Dice> games = gamesRepo.findAll();
+		List<Game> games = gamesRepo.findAll();
 		List<User> users = usersRepo.findAll();
 		
 		//declares and initiates the return string
@@ -82,10 +82,10 @@ public class ControllerRest {
 			int addedResults = 0;
 			
 			//stores all the games from a player
-			ArrayList<Dice> playerGames = new ArrayList<Dice>();
-			Iterator<Dice> ite = games.iterator();
+			ArrayList<Game> playerGames = new ArrayList<Game>();
+			Iterator<Game> ite = games.iterator();
 			while(ite.hasNext()) {
-				Dice currentGame = ite.next();
+				Game currentGame = ite.next();
 				
 				if (currentGame.getIdPlayer() == user.getID()) {
 					playerGames.add(currentGame);
@@ -94,7 +94,7 @@ public class ControllerRest {
 			
 			//adds each of the player games to the JSON file
 			int remainingPlayers = -1;
-			for(Dice game: playerGames) {
+			for(Game game: playerGames) {
 				usersWithPercentage += game.toString();
 				addedResults += game.getTotalResult();
 				numberOfGames++;
@@ -147,7 +147,7 @@ public class ControllerRest {
 	
 	//Makes a game throw for a player
 	@PostMapping("/{idPlayer}/games")
-	public String throwDices(@PathVariable int idPlayer) {
+	public String playGame(@PathVariable int idPlayer) {
 		Optional<User> optionalUser = usersRepo.findById(idPlayer);
 		if(optionalUser.isPresent()) {
 			
@@ -165,13 +165,13 @@ public class ControllerRest {
 				idRepo.save(createId);
 			}
 			
-			//throw the dices
-			Dice diceResult = new Dice();
-			diceResult.throwDice(idGame, idPlayer);
+			//throw the dice
+			Game gameResult = new Game();
+			gameResult.startGame(idGame, idPlayer);
 			
 			//save the result to the DB
-			gamesRepo.save(diceResult);
-			return diceResult.toString();
+			gamesRepo.save(gameResult);
+			return gameResult.toString();
 		}
 		else {
 			return "User not found";
@@ -186,18 +186,65 @@ public class ControllerRest {
 		if(optionalUser.isPresent()) {
 			
 			//collects all the games
-			List<Dice> allGames = gamesRepo.findAll();
+			List<Game> allGames = gamesRepo.findAll();
 			
 			//iterates along all the games to detect the games made by a player and deletes it
-			Iterator<Dice> ite = allGames.iterator();
+			Iterator<Game> ite = allGames.iterator();
 			while(ite.hasNext()) {
-				Dice dice = ite.next();
-				if (dice.getIdPlayer() == idPlayer) {
-					int idDelete = dice.getIdGame();
+				Game game = ite.next();
+				if (game.getIdPlayer() == idPlayer) {
+					int idDelete = game.getIdGame();
 					gamesRepo.deleteById(idDelete);
 				}
 			}
 			return "Games history cleared";
+		}
+		else {
+			return "User not found";
+		}
+	}
+	
+	//gets all the games from a player //TODO formatejar el JSON
+	@GetMapping("/{idUser}/games")
+	public String gamesFromPlayerId(@PathVariable int idUser) {
+		Optional<User> optionalUser = usersRepo.findById(idUser);
+		if(optionalUser.isPresent()) {
+			
+			//collects all the games
+			List<Game> allGames = gamesRepo.findAll();
+			String toReturn = "{";
+			
+			//iterates along all the games to detect the games made by a player and stores it
+			Iterator<Game> ite = allGames.iterator();
+			int remainingGames = -1;
+			ArrayList<Integer> idGames = new ArrayList<Integer>();
+			
+			while(ite.hasNext()) {
+				Game game = ite.next();
+				
+				//collects all the games IDs that are played by a user
+				if (game.getIdPlayer() == idUser) {
+					idGames.add(game.getIdGame());
+				}
+			}
+			
+			//adds the different games to the JSON
+			for (int i=0; i<idGames.size(); i++) {
+				toReturn += gamesRepo.findById(idGames.get(i)).get().toString();
+				
+				//adds a comma to the JSON file for separating from the next data
+				if (remainingGames == -1) {
+					remainingGames = idGames.size()-1;
+				}
+				if (remainingGames > 0) {
+					toReturn += ", ";
+					remainingGames--;
+				}
+			}
+			
+			//encloses the JSON file and returns the result
+			toReturn += "}";
+			return toReturn;
 		}
 		else {
 			return "User not found";
@@ -212,7 +259,7 @@ public class ControllerRest {
 * POST /players/{id}/games/ : un jugador específic realitza una tirada dels daus.  
 * DELETE /players/{id}/games: elimina les tirades del jugador 
 * GET /players/: retorna el llistat de tots els jugadors del sistema amb el seu percentatge mig d’èxits   
-GET /players/{id}/games: retorna el llistat de jugades per un jugador.  
+* GET /players/{id}/games: retorna el llistat de jugades per un jugador.  
 GET /players/ranking: retorna el ranking mig de tots els jugadors del sistema. És a dir, el percentatge mig d’èxits. 
 GET /players/ranking/loser: retorna el jugador amb pitjor percentatge d’èxit 
 GET /players/ranking/winner: retorna el jugador amb millor percentatge d’èxit 
