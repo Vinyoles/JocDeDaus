@@ -60,7 +60,7 @@ public class ControllerRest {
 		//assigns the date and save the result to the database
 		user.assignLocalDate();
 		usersRepo.save(user);
-		return "User created (ID-Name): " + user.getID() + "-" + user.getName();
+		return "User created (ID-Name-Anonymous): " + user.getId() + "-" + user.getUserName() + "-" + user.isAnonymous();
 	}
 	
 	//returns all the players and its mean exit percentage
@@ -85,7 +85,7 @@ public class ControllerRest {
 			while(ite.hasNext()) {
 				Game currentGame = ite.next();
 				
-				if (currentGame.getIdPlayer() == user.getID()) {
+				if (currentGame.getIdPlayer() == user.getId()) {
 					playerGames.add(currentGame);
 				}
 			}
@@ -122,12 +122,15 @@ public class ControllerRest {
 	
 	//modifies a player name
 	@PostMapping("/{id}")
-	public String modifyUser(@PathVariable int id, @RequestBody String userName) {
+	public String modifyUser(@PathVariable int id, @RequestBody User user) {
 		Optional<User> optionalUser = usersRepo.findById(id);
 		if(optionalUser.isPresent()) {
-			optionalUser.get().setName(userName);
+			if (optionalUser.get().getUserName() != null) {
+				optionalUser.get().setUserName(user.getUserName());
+			}
+			optionalUser.get().setAnonymous(user.isAnonymous());
 			usersRepo.save(optionalUser.get());
-			return "New name for the user " + id + ": " + userName;
+			return "UserName-Anonymous: " + user.getUserName() + "-" + user.isAnonymous();
 		}
 		else {
 			return "User not found";
@@ -297,7 +300,7 @@ public class ControllerRest {
 		}
 		else {
 			//saves the user name and mean value and returns the result
-			String loserName = theLoser.getName();
+			String loserName = theLoser.getUserName();
 			double loserValue = theLoser.winPercentage(games);
 			loser += "\"loser name\":" + loserName + ", \"Success percentage\":" + loserValue + "}";
 			return loser;
@@ -336,7 +339,7 @@ public class ControllerRest {
 		}
 		else {
 			//saves the user name and mean value and returns the result
-			String winnerName = theWinner.getName();
+			String winnerName = theWinner.getUserName();
 			double winnerValue = theWinner.winPercentage(games);
 			winner += "\"winner name\":" + winnerName + ", \"Success percentage\":" + winnerValue + "}";
 			return winner;

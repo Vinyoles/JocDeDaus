@@ -23,6 +23,8 @@ public class User {
 	@Field(name="registerDate")
 	private LocalDate registerDate;
 
+	@Field(name="anonymous")
+	private boolean anonymous;
 	
 	
 	
@@ -81,16 +83,17 @@ public class User {
 	}
 	
 	
-	public int getID() {
+	public int getId() {
 		return id;
 	}
-	public void setID(int id) {
+	public void setId(int id) {
 		this.id = id;
 	}
-	public String getName() {
-		return userName;
+	public String getUserName() {
+		if (anonymous == true) return "anonymous";
+		else return userName;
 	}
-	public void setName(String name) {
+	public void setUserName(String name) {
 		this.userName = name;
 	}
 	public LocalDate getRegisterDate() {
@@ -99,10 +102,16 @@ public class User {
 	public void setRegisterDate(LocalDate registerDate) {
 		this.registerDate = registerDate;
 	}
+	public boolean isAnonymous() {
+		return anonymous;
+	}
+	public void setAnonymous(boolean anonymous) {
+		this.anonymous = anonymous;
+	}
 	
-	
+
 	@Override
 	public String toString() {
-		return "\"ID" + id + "\": {\"userName\": \"" + userName + "\", \"registerDate\": \"" + registerDate + "\", \"gamesPlayed\":{";
+		return "\"ID" + id + "\": {\"userName\": \"" + getUserName() + "\", \"registerDate\": \"" + registerDate + "\", \"gamesPlayed\":{";
 	}
 }
