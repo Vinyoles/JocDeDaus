@@ -17,7 +17,7 @@ public class IdToAssign {
 
 	@Id
 	private int id; //TODO change to enum(?)
-	//1:user, 2:game
+	//1:player, 2:game
 	
 	@Field(name="idStored")
 	private int idStored;

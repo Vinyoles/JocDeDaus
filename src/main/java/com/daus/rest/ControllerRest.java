@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.daus.models.Game;
 import com.daus.models.IdToAssign;
-import com.daus.models.User;
+import com.daus.models.Player;
 import com.daus.repository.GamesRepository;
 import com.daus.repository.IdsRepository;
-import com.daus.repository.UsersRepository;
+import com.daus.repository.PlayersRepository;
 
 @CrossOrigin(origins = "http://127.0.0.1:5500", maxAge = 3600) //TODO canviar en funció de la web des d'on es conecti
 @RestController
@@ -29,7 +29,7 @@ public class ControllerRest {
 	
 	//injection of the dependencies
 	@Autowired
-	private UsersRepository usersRepo;
+	private PlayersRepository playersRepo;
 	
 	@Autowired
 	private IdsRepository idRepo;
@@ -40,7 +40,7 @@ public class ControllerRest {
 	
 	//create a new player
 	@PostMapping
-	public String createNewUser(@RequestBody User user) {
+	public String createNewPlayer(@RequestBody Player player) {
 		
 		//finds the last ID and sends it to the constructor
 		int newId;
@@ -55,29 +55,29 @@ public class ControllerRest {
 			IdToAssign createId = new IdToAssign(1, newId);
 			idRepo.save(createId);
 		}
-		user.assignId(newId);
+		player.assignId(newId);
 		
 		//assigns the date and save the result to the database
-		user.assignLocalDate();
-		usersRepo.save(user);
-		return "User created (ID-Name-Anonymous): " + user.getId() + "-" + user.getUserName() + "-" + user.isAnonymous();
+		player.assignLocalDate();
+		playersRepo.save(player);
+		return "Player created (ID-Name-Anonymous): " + player.getId() + "-" + player.getPlayerName() + "-" + player.isAnonymous();
 	}
 	
 	//returns all the players and its mean exit percentage
 	@GetMapping
-	public String getAllUsers() {
+	public String getAllPlayers() {
 		
-		//list all the users and games
+		//list all the players and games
 		List<Game> games = gamesRepo.findAll();
-		List<User> users = usersRepo.findAll();
+		List<Player> players = playersRepo.findAll();
 		
 		//declares and initiates the return string
-		String usersWithPercentage = "{\"users\":{";
+		String playersWithPercentage = "{\"players\":{";
 		
-		//for each user and game, stores its variable to a JSON file
-		int remainingUsers = users.size()-1;
-		for (User user: users) {
-			usersWithPercentage += user.toString();
+		//for each player and game, stores its variable to a JSON file
+		int remainingPlayers = players.size()-1;
+		for (Player player: players) {
+			playersWithPercentage += player.toString();
 			
 			//stores all the games from a player
 			ArrayList<Game> playerGames = new ArrayList<Game>();
@@ -85,63 +85,63 @@ public class ControllerRest {
 			while(ite.hasNext()) {
 				Game currentGame = ite.next();
 				
-				if (currentGame.getIdPlayer() == user.getId()) {
+				if (currentGame.getIdPlayer() == player.getId()) {
 					playerGames.add(currentGame);
 				}
 			}
 			
 			//adds each of the player games to the JSON file
-			int remainingPlayers = -1;
+			int remainingPlayerGames = -1;
 			for(Game game: playerGames) {
-				usersWithPercentage += game.toString();
+				playersWithPercentage += game.toString();
 				
 				//adds a comma to the JSON file for separating from the next data
-				if (remainingPlayers == -1) {
-					remainingPlayers = playerGames.size()-1;
+				if (remainingPlayerGames == -1) {
+					remainingPlayerGames = playerGames.size()-1;
 				}
-				if (remainingPlayers > 0) {
-					usersWithPercentage += ", ";
-					remainingPlayers--;
+				if (remainingPlayerGames > 0) {
+					playersWithPercentage += ", ";
+					remainingPlayerGames--;
 				}
 			}
 			
 			//stores to the JSON the player success rate. If the player hasn't played any game, stores 0
-			usersWithPercentage += "}, \"meanValue\":" + user.meanValue(games) + "}";
+			playersWithPercentage += "}, \"meanValue\":" + player.meanValue(games) + "}";
 			
-			//adds a comma if there are more users
-			if (remainingUsers > 0) {
-				usersWithPercentage += ", ";
-				remainingUsers--;
+			//adds a comma if there are more players
+			if (remainingPlayers > 0) {
+				playersWithPercentage += ", ";
+				remainingPlayers--;
 			}
 		}
 		
 		//encloses the string and returns the JSON data
-		usersWithPercentage += "}}";
-		return usersWithPercentage;
+		playersWithPercentage += "}}";
+		return playersWithPercentage;
 	}
 	
 	//modifies a player name
 	@PostMapping("/{id}")
-	public String modifyUser(@PathVariable int id, @RequestBody User user) {
-		Optional<User> optionalUser = usersRepo.findById(id);
-		if(optionalUser.isPresent()) {
-			if (optionalUser.get().getUserName() != null) {
-				optionalUser.get().setUserName(user.getUserName());
+	public String modifyPlayer(@PathVariable int id, @RequestBody Player player) {
+		Optional<Player> optionalPlayer = playersRepo.findById(id);
+		if(optionalPlayer.isPresent()) {
+			if (optionalPlayer.get().getPlayerName() != null) {
+				optionalPlayer.get().setPlayerName(player.getPlayerName());
 			}
-			optionalUser.get().setAnonymous(user.isAnonymous());
-			usersRepo.save(optionalUser.get());
-			return "UserName-Anonymous: " + user.getUserName() + "-" + user.isAnonymous();
+			optionalPlayer.get().setAnonymous(player.isAnonymous());
+			playersRepo.save(optionalPlayer.get());
+			return "PlayerName-Anonymous: " + player.getPlayerName() + "-" + player.isAnonymous();
 		}
 		else {
-			return "User not found";
+			return "Player not found";
 		}
 	}
 	
 	//Makes a game throw for a player
 	@PostMapping("/{idPlayer}/games")
 	public String playGame(@PathVariable int idPlayer) {
-		Optional<User> optionalUser = usersRepo.findById(idPlayer);
-		if(optionalUser.isPresent()) {
+		Optional<Player> optionalPlayer = playersRepo.findById(idPlayer);
+		if(optionalPlayer.isPresent()) {
 			
 			//Calculates the game id
 			int idGame;
@@ -166,7 +166,7 @@ public class ControllerRest {
 			return gameResult.toString();
 		}
 		else {
-			return "User not found";
+			return "Player not found";
 		}
 	}
 	
@@ -174,8 +174,8 @@ public class ControllerRest {
 	@DeleteMapping("/{idPlayer}/games")
 	public String deleteGames(@PathVariable int idPlayer) {
 		
-		Optional<User> optionalUser = usersRepo.findById(idPlayer);
-		if(optionalUser.isPresent()) {
+		Optional<Player> optionalPlayer = playersRepo.findById(idPlayer);
+		if(optionalPlayer.isPresent()) {
 			
 			//collects all the games
 			List<Game> allGames = gamesRepo.findAll();
@@ -192,15 +192,15 @@ public class ControllerRest {
 			return "Games history cleared";
 		}
 		else {
-			return "User not found";
+			return "Player not found";
 		}
 	}
 	
 	//gets all the games from a player
-	@GetMapping("/{idUser}/games")
-	public String gamesFromPlayerId(@PathVariable int idUser) {
-		Optional<User> optionalUser = usersRepo.findById(idUser);
-		if(optionalUser.isPresent()) {
+	@GetMapping("/{idPlayer}/games")
+	public String gamesFromPlayerId(@PathVariable int idPlayer) {
+		Optional<Player> optionalPlayer = playersRepo.findById(idPlayer);
+		if(optionalPlayer.isPresent()) {
 			
 			//collects all the games
 			List<Game> allGames = gamesRepo.findAll();
@@ -214,8 +214,8 @@ public class ControllerRest {
 			while(ite.hasNext()) {
 				Game game = ite.next();
 				
-				//collects all the games IDs that are played by a user
-				if (game.getIdPlayer() == idUser) {
+				//collects all the games IDs that are played by a player
+				if (game.getIdPlayer() == idPlayer) {
 					idGames.add(game.getIdGame());
 				}
 			}
@@ -239,7 +239,7 @@ public class ControllerRest {
 			return toReturn;
 		}
 		else {
-			return "User not found";
+			return "Player not found";
 		}
 	}
 	
@@ -273,20 +273,20 @@ public class ControllerRest {
 	public String getLoser() {
 		String loser = "{";
 		List<Game> games = gamesRepo.findAll();
-		List<User> users = usersRepo.findAll();
-		User theLoser = null;
+		List<Player> players = playersRepo.findAll();
+		Player theLoser = null;
 		
-		//searches from the users, the user with a lower games rates
-		for (User user: users) {
-			double percentage = user.winPercentage(games);
+		//searches from the players, the player with a lower games rates
+		for (Player player: players) {
+			double percentage = player.winPercentage(games);
 
-			//searches for the lower win percentage on a user
+			//searches for the lower win percentage on a player
 			try {
 				if (theLoser == null && percentage != 0) {
-					theLoser = user;
+					theLoser = player;
 				}
 				else if (percentage < theLoser.winPercentage(games) && percentage != 0) {
-					theLoser = user;
+					theLoser = player;
 				}
 			}
 			catch (Exception nullPointerException){
@@ -296,11 +296,11 @@ public class ControllerRest {
 		
 		//returns the loser, if non of the players has won a game, returns a message
 		if (theLoser == null) {
-			return "Non of the players has won a game. If the users only had losed games, does not enter on the ranking";
+			return "Non of the players has won a game. If the players only had losed games, does not enter on the ranking";
 		}
 		else {
-			//saves the user name and mean value and returns the result
-			String loserName = theLoser.getUserName();
+			//saves the player name and mean value and returns the result
+			String loserName = theLoser.getPlayerName();
 			double loserValue = theLoser.winPercentage(games);
 			loser += "\"loser name\":" + loserName + ", \"Success percentage\":" + loserValue + "}";
 			return loser;
@@ -312,20 +312,20 @@ public class ControllerRest {
 	public String getWinner() {
 		String winner = "{";
 		List<Game> games = gamesRepo.findAll();
-		List<User> users = usersRepo.findAll();
-		User theWinner = null;
+		List<Player> players = playersRepo.findAll();
+		Player theWinner = null;
 		
-		//searches from the users, the user with a higher games rates
-		for (User user: users) {
-			double percentage = user.winPercentage(games);
+		//searches from the players, the player with a higher games rates
+		for (Player player: players) {
+			double percentage = player.winPercentage(games);
 
-			//searches for the higher win percentage on a user
+			//searches for the higher win percentage on a player
 			try {
 				if (theWinner == null && percentage != 0) {
-					theWinner = user;
+					theWinner = player;
 				}
 				else if (percentage > theWinner.winPercentage(games)) {
-					theWinner = user;
+					theWinner = player;
 				}
 			}
 			catch (Exception nullPointerException){
@@ -338,8 +338,8 @@ public class ControllerRest {
 			return "Non of the players has won a game";
 		}
 		else {
-			//saves the user name and mean value and returns the result
-			String winnerName = theWinner.getUserName();
+			//saves the player name and mean value and returns the result
+			String winnerName = theWinner.getPlayerName();
 			double winnerValue = theWinner.winPercentage(games);
 			winner += "\"winner name\":" + winnerName + ", \"Success percentage\":" + winnerValue + "}";
 			return winner;
