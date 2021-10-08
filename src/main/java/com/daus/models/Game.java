@@ -19,13 +19,16 @@ public class Game {
 	@Field(name="totalResult")
 	private int totalResult;
 	
+	@Field(name="win")
+	private boolean win;
+	
 	@Field(name="idPlayer")
 	private int idPlayer;
 
 	
 	
 	//returns the value of a dice throw
-	public void startGame(int idGame, int idPlayer) {
+	public void playGame(int idGame, int idPlayer) {
 		
 		//saves the game ID and the player ID
 		this.idGame = idGame;
@@ -36,6 +39,12 @@ public class Game {
 		die1Result = (int) (Math.random() * 6) + 1; 
 		die2Result = (int) (Math.random() * 6) + 1;
 		totalResult = die1Result + die2Result;
+		if (totalResult == 7) {
+			win = true;
+		}
+		else {
+			win = false;
+		}
 	}
 
 
@@ -70,11 +79,18 @@ public class Game {
 	public void setIdPlayer(int idPlayer) {
 		this.idPlayer = idPlayer;
 	}
+	public boolean isWin() {
+		return win;
+	}
+	public void setWin(boolean win) {
+		this.win = win;
+	}
+
 
 
 	@Override
 	public String toString() {
 		return "\"idGame" + idGame + "\": {\"die1Result\":" + die1Result + ", \"die2Result\":" + die2Result
-				+ ", \"totalResult\":" + totalResult + ", \"idPlayer\":" + idPlayer + "}";
+				+ ", \"totalResult\":" + totalResult + ", \"win\":" + win + ", \"idPlayer\":" + idPlayer + "}";
 	}
 }

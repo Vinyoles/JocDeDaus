@@ -106,7 +106,7 @@ public class ControllerRest {
 			}
 			
 			//stores to the JSON the player success rate. If the player hasn't played any game, stores 0
-			usersWithPercentage += "}, \"meanValue\":" + user.meanValue(games, user.getID()) + "}";
+			usersWithPercentage += "}, \"meanValue\":" + user.meanValue(games) + "}";
 			
 			//adds a comma if there are more users
 			if (remainingUsers > 0) {
@@ -156,7 +156,7 @@ public class ControllerRest {
 			
 			//throw the dice
 			Game gameResult = new Game();
-			gameResult.startGame(idGame, idPlayer);
+			gameResult.playGame(idGame, idPlayer);
 			
 			//save the result to the DB
 			gamesRepo.save(gameResult);
@@ -240,28 +240,25 @@ public class ControllerRest {
 		}
 	}
 	
-	//returns the mean values of all the players on the system
+	//returns the percentage of all the players on the system
 	@GetMapping("/ranking")
 	public String getRanking() {
-		String ranking = "{\"mean value\":";
+		String ranking = "{\"Success percentage\":";
 		
-		//from all the games, searches the total result
+		//for all the games, searches for the success and the failed games
+		int success = 0;
+		int fail = 0;
 		List<Game> games = gamesRepo.findAll();
-		int gameCounter = 0;
-		double resultAdded = 0;
 		for (Game game: games) {
-			resultAdded += game.getTotalResult();
-			gameCounter++;
+			if (game.isWin()) success++;
+			else fail++;
 		}
 		
-		//calculates the mean value if there is data
+		//calculates the result from the data on success and failure
 		double result;
-		if (gameCounter != 0) {
-			result = resultAdded / gameCounter;
-		}
-		else {
-			result = 0;
-		}
+		if (fail == 0 && success != 0) result = 100;
+		else if (fail == 0 && success == 0) result = 0;
+		else result = (double) success/(success + fail) * 100;
 		
 		//returns the result
 		ranking += result +"}";
@@ -278,25 +275,36 @@ public class ControllerRest {
 		
 		//searches from the users, the user with a lower games rates
 		for (User user: users) {
-			double meanValue = user.meanValue(games, user.getID());
-			if (theLoser == null) {
-				theLoser = user;
+			double percentage = user.winPercentage(games);
+
+			//searches for the lower win percentage on a user
+			try {
+				if (theLoser == null && percentage != 0) {
+					theLoser = user;
+				}
+				else if (percentage < theLoser.winPercentage(games) && percentage != 0) {
+					theLoser = user;
+				}
 			}
-			else if (meanValue == 0) {
-				break;
-			}
-			else if (meanValue < theLoser.meanValue(games, theLoser.getID())) {
-				theLoser = user;
+			catch (Exception nullPointerException){
+				System.out.println("theLoser parameter is null");
 			}
 		}
 		
-		//saves the user name and mean value and returns the result
-		String loserName = theLoser.getName();
-		double loserValue = theLoser.meanValue(games, theLoser.getID());
-		loser += "\"loser name\":" + loserName + ", \"loser value\":" + loserValue + "}";
-		return loser;
+		//returns the loser, if non of the players has won a game, returns a message
+		if (theLoser == null) {
+			return "Non of the players has won a game. If the users only had losed games, does not enter on the ranking";
+		}
+		else {
+			//saves the user name and mean value and returns the result
+			String loserName = theLoser.getName();
+			double loserValue = theLoser.winPercentage(games);
+			loser += "\"loser name\":" + loserName + ", \"Success percentage\":" + loserValue + "}";
+			return loser;
+		}
 	}
 	
+	//returns the player with the higher percentage
 	@GetMapping("/ranking/winner")
 	public String getWinner() {
 		String winner = "{";
@@ -304,38 +312,37 @@ public class ControllerRest {
 		List<User> users = usersRepo.findAll();
 		User theWinner = null;
 		
-		//searches from the users, the user with a lower games rates
+		//searches from the users, the user with a higher games rates
 		for (User user: users) {
-			double meanValue = user.meanValue(games, user.getID());
-			if (theWinner == null) {
-				theWinner = user;
+			double percentage = user.winPercentage(games);
+
+			//searches for the higher win percentage on a user
+			try {
+				if (theWinner == null && percentage != 0) {
+					theWinner = user;
+				}
+				else if (percentage > theWinner.winPercentage(games)) {
+					theWinner = user;
+				}
 			}
-			else if (meanValue == 0) {
-				break;
-			}
-			else if (meanValue > theWinner.meanValue(games, theWinner.getID())) {
-				theWinner = user;
+			catch (Exception nullPointerException){
+				System.out.println("theWinner parameter is null");
 			}
 		}
 		
-		//saves the user name and mean value and returns the result
-		String winnerName = theWinner.getName();
-		double winnerValue = theWinner.meanValue(games, theWinner.getID());
-		winner += "\"winner name\":" + winnerName + ", \"winner value\":" + winnerValue + "}";
-		return winner;
+		//returns the winner, if non of the players has won a game, returns a message
+		if (theWinner == null) {
+			return "Non of the players has won a game";
+		}
+		else {
+			//saves the user name and mean value and returns the result
+			String winnerName = theWinner.getName();
+			double winnerValue = theWinner.winPercentage(games);
+			winner += "\"winner name\":" + winnerName + ", \"Success percentage\":" + winnerValue + "}";
+			return winner;
+		}
 	}
 }
 
 
-/*
-* POST: /players : crea un jugador 
-* PUT /players : modifica el nom del jugador 
-* POST /players/{id}/games/ : un jugador específic realitza una tirada dels daus.  
-* DELETE /players/{id}/games: elimina les tirades del jugador 
-* GET /players/: retorna el llistat de tots els jugadors del sistema amb el seu percentatge mig d’èxits   
-* GET /players/{id}/games: retorna el llistat de jugades per un jugador.  
-* GET /players/ranking: retorna el ranking mig de tots els jugadors del sistema. És a dir, el percentatge mig d’èxits. 
-* GET /players/ranking/loser: retorna el jugador amb pitjor percentatge d’èxit 
-* GET /players/ranking/winner: retorna el jugador amb millor percentatge d’èxit 
- * */
 
