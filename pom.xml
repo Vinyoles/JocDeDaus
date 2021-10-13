@@ -14,7 +14,7 @@
 	<name>JocDeDaus</name>
 	<description>A game of chance where the players compete to obtain 7 throwing two dices</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>8</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
