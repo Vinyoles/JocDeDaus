@@ -14,9 +14,8 @@ public class IdToAssign {
 		this.idStored = idStored;
 	}
 
-
 	@Id
-	private int id; //TODO change to enum(?)
+	private int id;
 	//1:player, 2:game
 	
 	@Field(name="idStored")

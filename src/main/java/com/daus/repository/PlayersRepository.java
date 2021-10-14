@@ -4,6 +4,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import com.daus.models.Player;
 
-public interface PlayersRepository extends MongoRepository<Player, Integer> {
+public interface PlayersRepository extends MongoRepository<Player, String> {
 
 }

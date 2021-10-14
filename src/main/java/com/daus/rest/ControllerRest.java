@@ -42,25 +42,13 @@ public class ControllerRest {
 	@PostMapping
 	public String createNewPlayer(@RequestBody Player player) {
 		
-		//finds the last ID and sends it to the constructor
-		int newId;
-		Optional<IdToAssign> idOptional = idRepo.findById(1);
-		if(idOptional.isPresent()) {
-			newId = idOptional.get().getIdStored() + 1;
-			idOptional.get().setIdStored(newId);
-			idRepo.save(idOptional.get());
-		}
-		else {
-			newId = 1;
-			IdToAssign createId = new IdToAssign(1, newId);
-			idRepo.save(createId);
-		}
-		player.assignId(newId);
+		//assigns the UUID
+		player.assignUUID();
 		
 		//assigns the date and save the result to the database
 		player.assignLocalDate();
 		playersRepo.save(player);
-		return "Player created (ID-Name-Anonymous): " + player.getId() + "-" + player.getPlayerName() + "-" + player.isAnonymous();
+		return "Player created (ID-Name-Anonymous): " + player.getUuid() + "-" + player.getPlayerName() + "-" + player.isAnonymous();
 	}
 	
 	//returns all the players and its mean exit percentage
@@ -85,7 +73,7 @@ public class ControllerRest {
 			while(ite.hasNext()) {
 				Game currentGame = ite.next();
 				
-				if (currentGame.getIdPlayer() == player.getId()) {
+				if (currentGame.getUuidPlayer().equals(player.getUuid())) {
 					playerGames.add(currentGame);
 				}
 			}
@@ -121,9 +109,9 @@ public class ControllerRest {
 	}
 	
 	//modifies a player name
-	@PostMapping("/{id}")
-	public String modifyPlayer(@PathVariable int id, @RequestBody Player player) {
-		Optional<Player> optionalPlayer = playersRepo.findById(id);
+	@PostMapping("/{uuid}")
+	public String modifyPlayer(@PathVariable String uuid, @RequestBody Player player) {
+		Optional<Player> optionalPlayer = playersRepo.findById(uuid);
 		if(optionalPlayer.isPresent()) {
 			if (optionalPlayer.get().getPlayerName() != null) {
 				optionalPlayer.get().setPlayerName(player.getPlayerName());
@@ -138,9 +126,9 @@ public class ControllerRest {
 	}
 	
 	//Makes a game throw for a player
-	@PostMapping("/{idPlayer}/games")
-	public String playGame(@PathVariable int idPlayer) {
-		Optional<Player> optionalPlayer = playersRepo.findById(idPlayer);
+	@PostMapping("/{uuidPlayer}/games")
+	public String playGame(@PathVariable String uuidPlayer) {
+		Optional<Player> optionalPlayer = playersRepo.findById(uuidPlayer);
 		if(optionalPlayer.isPresent()) {
 			
 			//Calculates the game id
@@ -159,7 +147,7 @@ public class ControllerRest {
 			
 			//throw the dice
 			Game gameResult = new Game();
-			gameResult.playGame(idGame, idPlayer);
+			gameResult.playGame(idGame, uuidPlayer);
 			
 			//save the result to the DB
 			gamesRepo.save(gameResult);
@@ -172,7 +160,7 @@ public class ControllerRest {
 	
 	//Deletes all the throws from a player
 	@DeleteMapping("/{idPlayer}/games")
-	public String deleteGames(@PathVariable int idPlayer) {
+	public String deleteGames(@PathVariable String idPlayer) {
 		
 		Optional<Player> optionalPlayer = playersRepo.findById(idPlayer);
 		if(optionalPlayer.isPresent()) {
@@ -184,7 +172,7 @@ public class ControllerRest {
 			Iterator<Game> ite = allGames.iterator();
 			while(ite.hasNext()) {
 				Game game = ite.next();
-				if (game.getIdPlayer() == idPlayer) {
+				if (game.getUuidPlayer().equals(idPlayer)) {
 					int idDelete = game.getIdGame();
 					gamesRepo.deleteById(idDelete);
 				}
@@ -198,7 +186,7 @@ public class ControllerRest {
 	
 	//gets all the games from a player
 	@GetMapping("/{idPlayer}/games")
-	public String gamesFromPlayerId(@PathVariable int idPlayer) {
+	public String gamesFromPlayerId(@PathVariable String idPlayer) {
 		Optional<Player> optionalPlayer = playersRepo.findById(idPlayer);
 		if(optionalPlayer.isPresent()) {
 			
@@ -215,7 +203,7 @@ public class ControllerRest {
 				Game game = ite.next();
 				
 				//collects all the games IDs that are played by a player
-				if (game.getIdPlayer() == idPlayer) {
+				if (game.getUuidPlayer().equals(idPlayer)) {
 					idGames.add(game.getIdGame());
 				}
 			}

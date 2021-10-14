@@ -22,17 +22,17 @@ public class Game {
 	@Field(name="win")
 	private boolean win;
 	
-	@Field(name="idPlayer")
-	private int idPlayer;
+	@Field(name="uuidPlayer")
+	private String uuidPlayer;
 
 	
 	
 	//returns the value of a dice throw
-	public void playGame(int idGame, int idPlayer) {
+	public void playGame(int idGame, String uuidPlayer) {
 		
 		//saves the game ID and the player ID
 		this.idGame = idGame;
-		this.idPlayer = idPlayer;
+		this.uuidPlayer = uuidPlayer;
 		
 		//calculates the throws and store them in temporal variables
 		//[(random number between 1 and 0) * (6 numbers that has a die)] + (1 has to be added as the result is between 0 and 5)
@@ -73,11 +73,11 @@ public class Game {
 	public void setIdGame(int idGame) {
 		this.idGame = idGame;
 	}
-	public int getIdPlayer() {
-		return idPlayer;
+	public String getUuidPlayer() {
+		return uuidPlayer;
 	}
-	public void setIdPlayer(int idPlayer) {
-		this.idPlayer = idPlayer;
+	public void setIdPlayer(String uuidPlayer) {
+		this.uuidPlayer = uuidPlayer;
 	}
 	public boolean isWin() {
 		return win;
@@ -91,6 +91,6 @@ public class Game {
 	@Override
 	public String toString() {
 		return "\"idGame" + idGame + "\": {\"die1Result\":" + die1Result + ", \"die2Result\":" + die2Result
-				+ ", \"totalResult\":" + totalResult + ", \"win\":" + win + ", \"idPlayer\":" + idPlayer + "}";
+				+ ", \"totalResult\":" + totalResult + ", \"win\":" + win + ", \"idPlayer\":" + uuidPlayer + "}";
 	}
 }

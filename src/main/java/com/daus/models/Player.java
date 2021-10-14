@@ -2,6 +2,7 @@ package com.daus.models;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -15,7 +16,7 @@ public class Player {
 	
 	
 	@Id
-	private int id;
+	private String uuid;
 	
 	@Field(name="playerName")
 	private String playerName;
@@ -27,11 +28,12 @@ public class Player {
 	private boolean anonymous;
 	
 	
-	
-	public void assignId(int id) {
-		this.id = id;
+	//calculates an uuid and assigns it as an integer to the user
+	public void assignUUID() {
+		this.uuid = UUID.randomUUID().toString();
 	}
 	
+	//assigns the local date
 	public void assignLocalDate() {
 		registerDate = LocalDate.now();
 	}
@@ -44,7 +46,7 @@ public class Player {
 		
 		//searches all the games from a player
 		for (Game game : games) {
-			if(game.getIdPlayer() == id) {
+			if(game.getUuidPlayer().equals(uuid)) {
 				addedResults += game.getTotalResult();
 				numberOfGames++;
 			}
@@ -67,7 +69,7 @@ public class Player {
 		int fail = 0;
 		
  		for (Game game: games) {
-			if (game.getIdPlayer() == id) {
+			if (game.getUuidPlayer().equals(uuid)) {
 				if (game.isWin()) success++;
 				else fail++;
 			}
@@ -83,11 +85,11 @@ public class Player {
 	}
 	
 	
-	public int getId() {
-		return id;
+	public String getUuid() {
+		return uuid;
 	}
-	public void setId(int id) {
-		this.id = id;
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
 	}
 	public String getPlayerName() {
 		if (anonymous == true) return "anonymous";
@@ -112,6 +114,6 @@ public class Player {
 
 	@Override
 	public String toString() {
-		return "\"ID" + id + "\": {\"playerName\": \"" + getPlayerName() + "\", \"registerDate\": \"" + registerDate + "\", \"gamesPlayed\":{";
+		return "\"ID" + uuid + "\": {\"playerName\": \"" + getPlayerName() + "\", \"registerDate\": \"" + registerDate + "\", \"gamesPlayed\":{";
 	}
 }
